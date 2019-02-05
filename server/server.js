@@ -28,13 +28,16 @@ app.post('/api/user', (req,res) => {
 
 app.post('/api/user/login', (req,res,next) => {
     User.findOne({'email': req.body.email}, (err,user) => {
-        if(!user){
-            res.json({message: "User not found!"});
-            };
+        if(!user) return res.json({message: "User not found!"});
          user.comparePassword(req.body.password,(err,isMatch) =>{
-            if(err) throw err;
+            if(err) return res.status(400).json(err);
             if(!isMatch) return res.status(400).json({mseesage: 'wrong password'});
-            res.status(200).send(isMatch);
+            // res.status(200).send(isMatch);
+            user.generateToken((err,user)=> {
+                if(err) return res.status(400).send(err);
+                console.log(user);
+                res.cookie('auth',user.token).send('ok');
+            })
          });
     })
 })
